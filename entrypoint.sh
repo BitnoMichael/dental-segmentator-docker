@@ -10,6 +10,22 @@ cp -r /models/* "$TARGET/"
 echo "=== Структура весов ==="
 ls -la "$TARGET"
 ls -la "$TARGET/nnUNetTrainer__nnUNetPlans__3d_fullres/" || true
+ls -la "$TARGET/nnUNetTrainer__nnUNetPlans__3d_fullres/fold_0/" || true
+
+# Автоматически определяем имя чекпоинта
+CKPT_DIR="$TARGET/nnUNetTrainer__nnUNetPlans__3d_fullres/fold_0"
+if [ -f "$CKPT_DIR/checkpoint_best.pth" ]; then
+    CKPT="checkpoint_best.pth"
+elif [ -f "$CKPT_DIR/checkpoint_final.pth" ]; then
+    CKPT="checkpoint_final.pth"
+else
+    echo "!!! Ни checkpoint_best.pth, ни checkpoint_final.pth не найдены в $CKPT_DIR"
+    echo "!!! Содержимое папки:"
+    ls -la "$CKPT_DIR"
+    exit 1
+fi
+
+echo "=== Использую чекпоинт: $CKPT ==="
 
 echo "=== Запуск nnUNetv2_predict ==="
 nnUNetv2_predict \
@@ -18,7 +34,7 @@ nnUNetv2_predict \
   -d 112 \
   -c 3d_fullres \
   -tr nnUNetTrainer \
-  -chk checkpoint_best.pth \
+  -chk "$CKPT" \
   -f 0 \
   -step_size 0.5
 
